@@ -1,35 +1,47 @@
-import os
-import subprocess
-import json
-from typing import Dict, Any
+import asyncio
+import logging
+from typing import Dict
 
-def run_nmap(target: str, xml_output_path: str = "/tmp/scan.xml") -> Dict[str, Any]:
-    """
-    Run nmap -sV -oX and return a parsed JSON result.
-    SAFE BEHAVIOR: unless ENABLE_NMAP env var is 'true', this returns a mocked result.
-    Use this only in an isolated lab and with ROE.
-    """
-    enable = os.getenv("ENABLE_NMAP", "false").lower() == "true"
-    if not enable:
-        # Return a mocked result for safe dev/testing
-        return {
-            "target": target,
-            "ports": [
-                {"port": 22, "proto": "tcp", "service": "ssh", "product": "OpenSSH", "version": "7.2p2"},
-                {"port": 80, "proto": "tcp", "service": "http", "product": "nginx", "version": "1.18"}
-            ],
-            "note": "mocked result (ENABLE_NMAP not true)"
-        }
+logger = logging.getLogger(__name__)
 
-    # Real run (only runs when ENABLE_NMAP=true)
-    cmd = ["nmap", "-sV", "-oX", xml_output_path, target]
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-    if proc.returncode != 0:
-        raise RuntimeError(f"nmap failed: {proc.stderr[:200]}")
+class ReconEngine:
+    """Reconnaissance engine for scanning targets"""
+    
+    def __init__(self):
+        self.active_scans: Dict[int, asyncio.Task] = {}
+        logger.info("ReconEngine initialized")
 
-    # Very small parser: we won't do full XML parsing here to keep it simple.
-    # For production, use xml.etree.ElementTree or python-nmap to parse.
-    # For now return raw xml as base64-like string and a note.
-    with open(xml_output_path, "rb") as f:
-        raw = f.read()
-    return {"target": target, "raw_xml_length": len(raw), "note": "raw XML stored in file"}
+    async def start_scan(self, target_id: int, target: str, scan_type: str = "quick") -> None:
+        """Start a reconnaissance scan for a target"""
+        try:
+            logger.info(f"Starting {scan_type} scan for target {target_id}: {target}")
+            
+            # For now, just simulate a scan - we'll implement actual scanning later
+            await self._simulate_scan(target_id, target, scan_type)
+            
+        except Exception as e:
+            logger.error(f"Scan failed for target {target_id}: {str(e)}")
+
+    async def _simulate_scan(self, target_id: int, target: str, scan_type: str) -> None:
+        """Simulate a scan (placeholder for actual implementation)"""
+        # Simulate scan duration based on scan type
+        if scan_type == "quick":
+            await asyncio.sleep(2)
+        elif scan_type == "comprehensive":
+            await asyncio.sleep(10)
+        else:
+            await asyncio.sleep(5)
+        
+        logger.info(f"Simulated {scan_type} scan completed for target {target_id}: {target}")
+        
+        # Update target status to completed
+        from app.services.db_helpers import update_target_status
+        update_target_status(target_id, "completed", {
+            "scan_type": scan_type,
+            "status": "completed",
+            "findings": ["Simulated scan completed"],
+            "target": target
+        })
+
+# Global recon engine instance
+recon_engine = ReconEngine()
