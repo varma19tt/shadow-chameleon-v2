@@ -1,0 +1,21 @@
+#root {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Animation for toast */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-enter {
+  animation: slideIn 0.3s ease-out;
+}
