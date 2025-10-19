@@ -3,3 +3,7 @@ uvicorn
 pydantic
 requests
 python-multipart
+psycopg2-binary==2.9.10
+neo4j==5.8.0
+python-dotenv
+psycopg2-binary
